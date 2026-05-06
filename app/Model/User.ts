@@ -8,7 +8,7 @@ export interface User extends Omit<Document, "_id"> {
   updatedAt: Date;
   Password: string;
 }
-
+  
 const UserSchema: Schema<User> = new mongoose.Schema({
   Username: {
     type: String,
