@@ -3,7 +3,9 @@ import CredentialsProvider from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
 import User from "@/app/Model/User";
 import dbConnect from "@/app/lib/db.connect";
-import { AuthOptions } from "next-auth"
+import { AuthOptions } from "next-auth";
+import { JWT } from "next-auth/jwt";
+import { Session } from "next-auth";
 
 export const authOptions: AuthOptions = {
   providers: [
@@ -15,7 +17,7 @@ export const authOptions: AuthOptions = {
         password: { label: "Password", type: "password" },
       },
       async authorize(
-        credentials: Record<"email" | "password", string> | undefined
+        credentials: Record<"email" | "password", string> | undefined,
       ) {
         if (!credentials?.email || !credentials?.password) {
           throw new Error("Email and password are required");
@@ -37,7 +39,7 @@ export const authOptions: AuthOptions = {
 
           const isPasswordCorrect = await bcrypt.compare(
             credentials.password,
-            user.Password
+            user.Password,
           );
 
           if (!isPasswordCorrect) {
@@ -47,19 +49,35 @@ export const authOptions: AuthOptions = {
           return user;
         } catch (error) {
           throw new Error(
-            error instanceof Error ? error.message : "Authentication failed"
+            error instanceof Error ? error.message : "Authentication failed",
           );
         }
       },
     }),
   ],
   pages: {
-    signIn: '/signIn'
+    signIn: "/signIn",
+  },
+  callbacks: {
+    async jwt({ token, user }) {
+      if (user) {
+        token.id = user.id
+        token.email = user.email
+      }
+      return token;
+    },
+    async session({ session, token }: {session: Session; token: JWT}) {
+      if (session.user) {
+        session.user.id = token.id as  string
+        session.user.email = token.email as string
+      }
+      return session;
+    },
   },
   session: {
-    strategy: "jwt"
+    strategy: "jwt",
   },
-  secret: process.env.AUTH_SECRET
+  secret: process.env.AUTH_SECRET,
 };
 
 export default NextAuth(authOptions);
