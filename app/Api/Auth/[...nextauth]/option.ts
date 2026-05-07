@@ -3,8 +3,9 @@ import CredentialsProvider from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
 import User from "@/app/Model/User";
 import dbConnect from "@/app/lib/db.connect";
+import { AuthOptions } from "next-auth"
 
-export const authOptions = {
+export const authOptions: AuthOptions = {
   providers: [
     CredentialsProvider({
       id: "credentials",
@@ -52,6 +53,13 @@ export const authOptions = {
       },
     }),
   ],
+  pages: {
+    signIn: '/signIn'
+  },
+  session: {
+    strategy: "jwt"
+  },
+  secret: process.env.AUTH_SECRET
 };
 
 export default NextAuth(authOptions);
