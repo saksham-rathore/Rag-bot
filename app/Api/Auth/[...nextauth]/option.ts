@@ -14,7 +14,7 @@ export const authOptions = {
         identifier: { label: "Email or Username", type: "text" },
         password: { label: "Password", type: "password" },
       },
-      async authorize(credentials, req) {
+      async authorize(credentials: Record<"identifier" | "password", string> | undefined): Promise<User | null>{
         
       },
     }),
