@@ -9,6 +9,7 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@pinecone-database/pinecone": "^7.2.0",
     "bcryptjs": "^3.0.3",
     "mongoose": "^9.6.1",
     "next": "16.2.4",
