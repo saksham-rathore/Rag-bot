@@ -12,7 +12,7 @@ export default function SignIn() {
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [rememberMe, setRememberMe] = useState(true); // Default true as in screenshot
+  const [rememberMe, setRememberMe] = useState(true);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -48,7 +48,7 @@ export default function SignIn() {
     );
   }
 
-  // Signed in UI
+  // Signed in UI (Styled to match the dark aesthetic)
   if (session) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-[#0a0a0a] font-sans relative overflow-hidden">
@@ -69,12 +69,12 @@ export default function SignIn() {
           <span className="text-white text-2xl font-serif tracking-wide font-bold">Lexora<span className="text-amber-100/70">.AI</span></span>
         </div>
 
-        <div className="bg-[#0f0f0f]/90 backdrop-blur-xl rounded-[2rem] p-10 w-full max-w-[480px] shadow-[0_30px_60px_rgba(0,0,0,0.8),0_0_40px_rgba(217,119,6,0.15),inset_0_1px_1px_rgba(255,255,255,0.05)] relative overflow-hidden z-10"
+        <div className="bg-[#0f0f0f]/90 backdrop-blur-xl border border-zinc-800/80 rounded-[2rem] p-10 w-full max-w-[480px] shadow-[0_0_50px_rgba(0,0,0,0.5)] relative overflow-hidden z-10"
              style={{ 
                backgroundImage: 'linear-gradient(to right, rgba(255,255,255,0.03) 1px, transparent 1px), linear-gradient(to bottom, rgba(255,255,255,0.03) 1px, transparent 1px)', 
                backgroundSize: '40px 40px' 
              }}>
-          <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/[0.05] to-transparent pointer-events-none rounded-[2rem]"></div>
+          <div className="absolute inset-0 bg-gradient-to-b from-white/5 to-transparent pointer-events-none"></div>
           
           <div className="relative z-10 flex flex-col items-center gap-6">
             <div className="w-24 h-24 bg-gradient-to-br from-amber-200 to-amber-500 rounded-full flex items-center justify-center text-4xl text-black font-serif font-bold shadow-[0_0_30px_rgba(245,158,11,0.3)]">
@@ -120,12 +120,12 @@ export default function SignIn() {
       </div>
 
       {/* Main Card */}
-      <div className="bg-[#0f0f0f]/80 backdrop-blur-xl rounded-[2rem] p-8 sm:p-12 w-full max-w-[480px] shadow-[0_30px_60px_rgba(0,0,0,0.8),0_0_40px_rgba(217,119,6,0.15),inset_0_1px_1px_rgba(255,255,255,0.05)] relative z-10"
+      <div className="bg-[#0f0f0f]/80 backdrop-blur-xl border border-zinc-800/80 rounded-[2rem] p-8 sm:p-12 w-full max-w-[480px] shadow-[0_0_50px_rgba(0,0,0,0.5)] relative z-10"
            style={{ 
              backgroundImage: 'linear-gradient(to right, rgba(255,255,255,0.03) 1px, transparent 1px), linear-gradient(to bottom, rgba(255,255,255,0.03) 1px, transparent 1px)', 
              backgroundSize: '60px 60px' 
            }}>
-        <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/[0.05] to-transparent pointer-events-none rounded-[2rem]"></div>
+        <div className="absolute inset-0 bg-gradient-to-b from-white/[0.03] to-transparent pointer-events-none rounded-[2rem]"></div>
         
         <div className="relative z-10">
           <h1 className="text-white text-3xl font-serif font-bold text-center tracking-tight mb-2">Welcome back</h1>
