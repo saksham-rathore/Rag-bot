@@ -5,10 +5,20 @@ import User from "@/app/Model/User";
 import dbConnect from "@/app/lib/db.connect";
 import { AuthOptions } from "next-auth";
 import { JWT } from "next-auth/jwt";
+import GithubProvider from "next-auth/providers/github";
+import GoogleProvider from "next-auth/providers/google";
 import { Session } from "next-auth";
 
 export const authOptions: AuthOptions = {
   providers: [
+    GithubProvider({
+      clientId: process.env.GITHUB_ID as string,
+      clientSecret: process.env.GITHUB_SECRET as string,
+    }),
+    GoogleProvider({
+      clientId: process.env.GOOGLE_CLIENT_ID as string,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET as string,
+    }),
     CredentialsProvider({
       id: "credentials",
       name: "credentials",
