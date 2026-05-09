@@ -29,6 +29,11 @@ export default function DashboardPage() {
   const [file, setFile] = useState<File | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [recentSessions, setRecentSessions] = useState<string[]>([
+    "Q3 Financial Report Analysis",
+    "Onboarding Documentation",
+    "API Integration Specs",
+  ]);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -89,6 +94,20 @@ export default function DashboardPage() {
   };
 
   const handleClearChat = () => {
+    // Find the first user message to use as the session title
+    const firstUserMsg = messages.find((m) => m.role === "user");
+    if (firstUserMsg) {
+      // Create a sensible title from the text or the uploaded file
+      const sessionTitle = firstUserMsg.file 
+        ? `Document: ${firstUserMsg.file}` 
+        : firstUserMsg.text.length > 25 
+          ? firstUserMsg.text.substring(0, 25) + "..." 
+          : firstUserMsg.text;
+          
+      // Add the new title to the top of the recent sessions list
+      setRecentSessions((prev) => [sessionTitle, ...prev]);
+    }
+
     setMessages([
       {
         id: Date.now(),
@@ -149,11 +168,7 @@ export default function DashboardPage() {
             Recent Sessions
           </div>
           <div className="space-y-1">
-            {[
-              "Q3 Financial Report Analysis",
-              "Onboarding Documentation",
-              "API Integration Specs",
-            ].map((chat, i) => (
+            {recentSessions.map((chat, i) => (
               <button
                 key={i}
                 className="w-full text-left px-3 py-2.5 rounded-lg hover:bg-neutral-800 transition-colors text-sm text-neutral-300 truncate group flex items-center gap-3"
