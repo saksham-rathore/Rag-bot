@@ -207,8 +207,8 @@ export default function DashboardPage() {
                     <span className="text-sm font-medium text-neutral-400">
                       {msg.role === "user" ? "You" : "Lexora"}
                     </span>
-                    <span className="text-xs text-neutral-600">
-                      {msg?.timestamp}
+                    <span suppressHydrationWarning className="text-xs text-neutral-600">
+                      {msg.timestamp}
                     </span>
                   </div>
 
