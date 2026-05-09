@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useRef } from "react";
 import {
   BotIcon,
   PaperclipIcon,
@@ -12,8 +12,15 @@ import {
 } from "@/app/components/Svg";
 
 export default function HeroPage() {
+  type Message = {
+    id: number;
+    text: string;
+    timestamp: string;
+  };
+
   const [Textarea, setTextarea] = useState([]);
   const [Input, setInput] = useState("");
+  const [Message, setMessage] = useState<Message[]>([]);
   const [File, setFile] = useState<File | null>(null);
   const [Processing, setProcessing] = useState(false);
   const [Recentsession, setRecentsession] = useState<string[]>([
@@ -21,24 +28,64 @@ export default function HeroPage() {
     "Onboarding Documentation",
     "API Integration Specs",
   ]);
-  const [Time, setTime] = useState("");
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  useEffect(() => {
-    const updateTime = () => {
-      const now = new Date().toLocaleTimeString("en-IN", {
+  const handleSend = (e?: React.FormEvent) => {
+    e?.preventDefault();
+    if (!Input.trim()) return;
+
+    const newMessage = {
+      id: Date.now(),
+      text: Input,
+      timestamp: new Date().toLocaleTimeString("en-IN", {
         hour: "2-digit",
         minute: "2-digit",
-        second: "2-digit",
         hour12: true,
-      });
-      setTime(now);
+      }),
     };
-    updateTime();
+    setMessage((prev) => [...prev, newMessage]);
+    setInput("");
+  };
 
-    const interval = setInterval(updateTime, 1000);
+  const handleClearChat = () => {
+    // Find the first user message to use as the session title
+    const firstUserMsg = messages.find((m) => m.role === "user");
+    if (firstUserMsg) {
+      // Create a sensible title from the text or the uploaded file
+      const sessionTitle = firstUserMsg.file
+        ? `Document: ${firstUserMsg.file}`
+        : firstUserMsg.text.length > 25
+          ? firstUserMsg.text.substring(0, 25) + "..."
+          : firstUserMsg.text;
+          
+      // Add the new title to the top of the recent sessions list
+      setRecentSessions((prev) => [sessionTitle, ...prev]);
+    }
 
-    return () => clearInterval(interval);
-  }, []);
+    setMessages([
+      {
+        id: Date.now(),
+        role: "assistant",
+        text: "Hello! I am Lexora, your intelligent assistant. Upload a PDF or image, or simply ask me a question.",
+        timestamp: new Date().toLocaleTimeString([], {
+          hour: "2-digit",
+          minute: "2-digit",
+        }),
+      },
+    ]);
+    setInput("");
+    setFile(null);
+  };
+
+  const handleclick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+
+    if (!file) return;
+  };
 
   return (
     <div className="flex h-screen bg-neutral-950 text-neutral-100 font-sans overflow-hidden">
@@ -186,27 +233,31 @@ export default function HeroPage() {
               </div>
             </div>
 
-            {/* Static User Message Example */}
-            <div className="flex gap-4 flex-row-reverse group transition-all duration-300 ease-in-out">
-              <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 mt-1 shadow-md bg-gradient-to-br from-neutral-700 to-neutral-800 border border-neutral-700">
-                <UserIcon />
-              </div>
-              <div className="flex flex-col items-end max-w-[85%] md:max-w-[75%]">
-                <div className="flex items-center gap-2 mb-1.5 px-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <span className="text-sm font-medium text-neutral-400">
-                    You
-                  </span>
-                  <span className="text-xs text-neutral-600"></span>
+            {/* Render dynamically created user messages */}
+            {Message.map((msg) => (
+              <div
+                key={msg.id}
+                className="flex gap-4 flex-row-reverse group transition-all duration-300 ease-in-out"
+              >
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 mt-1 shadow-md bg-gradient-to-br from-neutral-700 to-neutral-800 border border-neutral-700">
+                  <UserIcon />
                 </div>
-                <div className="p-4 md:p-5 text-[15px] leading-relaxed shadow-sm bg-neutral-800 text-neutral-100 rounded-2xl rounded-tr-sm border border-neutral-700/50">
-                  <p className="whitespace-pre-wrap">
-                    This is an example static user message for your custom logic
-                    to replace.
-                  </p>
-                </div>
-              </div>
-            </div>
 
+                <div className="flex flex-col items-end max-w-[85%] md:max-w-[75%]">
+                  <div className="flex items-center gap-2 mb-1.5 px-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <span className="text-sm font-medium text-neutral-400">
+                      You
+                    </span>
+                    <span className="text-xs text-neutral-600">
+                      {msg.timestamp}
+                    </span>
+                  </div>
+                  <div className="p-4 md:p-5 text-[15px] leading-relaxed shadow-sm bg-neutral-800 text-neutral-100 rounded-2xl rounded-tr-sm border border-neutral-700/50">
+                    <p className="whitespace-pre-wrap">{msg.text}</p>
+                  </div>
+                </div>
+              </div>
+            ))}
             <div className="h-4" />
           </div>
         </div>
@@ -214,19 +265,35 @@ export default function HeroPage() {
         {/* Input Area */}
         <div className="p-4 md:p-6 bg-gradient-to-t from-neutral-950 via-neutral-950/90 to-transparent pt-10">
           <div className="max-w-4xl mx-auto">
-            <form className="relative bg-neutral-900/80 backdrop-blur-xl border border-neutral-700/80 rounded-2xl shadow-2xl transition-all duration-300 focus-within:border-indigo-500/70 focus-within:ring-4 focus-within:ring-indigo-500/10 focus-within:bg-neutral-900">
+            <form
+              onSubmit={handleSend}
+              className="relative bg-neutral-900/80 backdrop-blur-xl border border-neutral-700/80 rounded-2xl shadow-2xl transition-all duration-300 focus-within:border-indigo-500/70 focus-within:ring-4 focus-within:ring-indigo-500/10 focus-within:bg-neutral-900"
+            >
               <div className="flex items-end p-2 gap-2">
                 <button
+                  onClick={handleclick}
                   type="button"
                   className="p-3 text-neutral-400 hover:text-indigo-400 hover:bg-neutral-800 rounded-xl transition-all shrink-0"
                   title="Upload PDF or Image"
                 >
                   <PaperclipIcon />
                 </button>
+                {/* <input
+                  type="file"
+                  ref={fileInputRef}
+                  onChange={handleFileChange}
+                  className="hidden"
+                /> */}
 
                 <textarea
                   value={Input}
                   onChange={(e) => setInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && !e.shiftKey) {
+                      e.preventDefault();
+                      handleSend();
+                    }
+                  }}
                   placeholder="Ask a question or upload a document for RAG context..."
                   className="flex-1 max-h-40 min-h-[44px] bg-transparent border-none focus:ring-0 resize-none py-3 px-2 text-neutral-100 placeholder:text-neutral-500 scrollbar-thin text-[15px]"
                   rows={1}
@@ -236,7 +303,7 @@ export default function HeroPage() {
                 />
 
                 <button
-                  type="button"
+                  type="submit"
                   className="p-3 bg-white text-black hover:bg-indigo-50 hover:text-indigo-600 rounded-xl transition-all shrink-0 font-medium mb-0.5 mr-0.5 shadow-sm active:scale-95"
                 >
                   <SendIcon />

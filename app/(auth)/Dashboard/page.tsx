@@ -98,10 +98,10 @@ export default function DashboardPage() {
     const firstUserMsg = messages.find((m) => m.role === "user");
     if (firstUserMsg) {
       // Create a sensible title from the text or the uploaded file
-      const sessionTitle = firstUserMsg.file 
-        ? `Document: ${firstUserMsg.file}` 
-        : firstUserMsg.text.length > 25 
-          ? firstUserMsg.text.substring(0, 25) + "..." 
+      const sessionTitle = firstUserMsg.file
+        ? `Document: ${firstUserMsg.file}`
+        : firstUserMsg.text.length > 25
+          ? firstUserMsg.text.substring(0, 25) + "..."
           : firstUserMsg.text;
           
       // Add the new title to the top of the recent sessions list
