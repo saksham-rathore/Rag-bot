@@ -121,7 +121,6 @@ export default function DashboardPage() {
     ]);
     setInput("");
     setFile(null);
-    
   };
 
   return (
