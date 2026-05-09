@@ -9,6 +9,7 @@ import {
   UserIcon,
   SettingsIcon,
   XIcon,
+  Plus,
 } from "@/app/components/Svg";
 
 export default function DashboardPage() {
