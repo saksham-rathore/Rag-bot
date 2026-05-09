@@ -122,9 +122,6 @@ export default function DashboardPage() {
     setInput("");
     setFile(null);
     
-    // if (textareaRef.current) {
-    //   textareaRef.current.style.height = "auto";
-    // }
   };
 
   return (
