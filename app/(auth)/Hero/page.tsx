@@ -58,14 +58,8 @@ export default function HeroPage() {
   };
 
   const handleclick = () => {
-    fileInputRef.current?.click();
-  };
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-
-    if (!file) return;
-  };
+    fileInputRef.current?.click()
+  }
 
   return (
     <div className="flex h-screen bg-neutral-950 text-neutral-100 font-sans overflow-hidden">
@@ -260,12 +254,6 @@ export default function HeroPage() {
                 >
                   <PaperclipIcon />
                 </button>
-                {/* <input
-                  type="file"
-                  ref={fileInputRef}
-                  onChange={handleFileChange}
-                  className="hidden"
-                /> */}
 
                 <textarea
                   value={Input}
