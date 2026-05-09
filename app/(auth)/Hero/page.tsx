@@ -16,11 +16,13 @@ export default function HeroPage() {
     id: number;
     text: string;
     timestamp: string;
+    role: string;
   };
 
+
+  const [Message, setMessage] = useState<Message[]>([]);
   const [Textarea, setTextarea] = useState([]);
   const [Input, setInput] = useState("");
-  const [Message, setMessage] = useState<Message[]>([]);
   const [File, setFile] = useState<File | null>(null);
   const [Processing, setProcessing] = useState(false);
   const [Recentsession, setRecentsession] = useState<string[]>([
@@ -36,6 +38,7 @@ export default function HeroPage() {
 
     const newMessage = {
       id: Date.now(),
+      role: "user",
       text: Input,
       timestamp: new Date().toLocaleTimeString("en-IN", {
         hour: "2-digit",
@@ -48,31 +51,8 @@ export default function HeroPage() {
   };
 
   const handleClearChat = () => {
-    // Find the first user message to use as the session title
-    const firstUserMsg = messages.find((m) => m.role === "user");
-    if (firstUserMsg) {
-      // Create a sensible title from the text or the uploaded file
-      const sessionTitle = firstUserMsg.file
-        ? `Document: ${firstUserMsg.file}`
-        : firstUserMsg.text.length > 25
-          ? firstUserMsg.text.substring(0, 25) + "..."
-          : firstUserMsg.text;
-          
-      // Add the new title to the top of the recent sessions list
-      setRecentSessions((prev) => [sessionTitle, ...prev]);
-    }
 
-    setMessages([
-      {
-        id: Date.now(),
-        role: "assistant",
-        text: "Hello! I am Lexora, your intelligent assistant. Upload a PDF or image, or simply ask me a question.",
-        timestamp: new Date().toLocaleTimeString([], {
-          hour: "2-digit",
-          minute: "2-digit",
-        }),
-      },
-    ]);
+    setMessage([]);
     setInput("");
     setFile(null);
   };
@@ -106,7 +86,9 @@ export default function HeroPage() {
         </div>
 
         <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">
-          <button className="w-full flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-3 rounded-xl transition-all shadow-lg shadow-indigo-600/20 font-medium mb-6 hover:scale-[1.02] active:scale-[0.98]">
+          <button 
+          onClick={handleClearChat}
+          className="w-full flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-3 rounded-xl transition-all shadow-lg shadow-indigo-600/20 font-medium mb-6 hover:scale-[1.02] active:scale-[0.98]">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               width="18"
