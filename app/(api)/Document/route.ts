@@ -55,7 +55,7 @@ export async function POST(req: NextRequest) {
 
     const fileUrl = (uploadResult as CloudinaryUploadResult).secure_url;
 
-    // 👉 Save in DB
+    // Save in DB
     const newDoc = await Document.create({
       title: file.name,
       fileUrl: fileUrl,
