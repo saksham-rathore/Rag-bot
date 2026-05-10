@@ -6,6 +6,7 @@ import User from "@/app/Model/User";
 import { getServerSession } from "next-auth";
 import fs from "fs/promises";
 import { v2 as cloudinary } from "cloudinary";
+import { queue } from "@/app/lib/Queue";
 
 type CloudinaryUploadResult = {
   secure_url: string;
@@ -59,6 +60,13 @@ export async function POST(req: NextRequest) {
       title: file.name,
       fileUrl: fileUrl,
       userId: session?.user?.id,
+    });
+
+    // Add job to the queue
+    await queue.add('file-ready', {
+      documentId: newDoc._id.toString(),
+      fileUrl: fileUrl,
+      filename: file.name,
     });
 
     return NextResponse.json({

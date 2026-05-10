@@ -5,8 +5,8 @@ import Document from "@/app/Model/Document";
 import Chunk from "@/app/Model/Chunk";
 import NextAuth from "next-auth/next";
 import fs from "fs/promises"
-import pdf from "pdf-parse"
-import { Buffer } from "buffer";
+import pdf from "pdf-parse"   
+
 
 
 export async function POST(req: NextRequest) {
