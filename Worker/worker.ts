@@ -1,6 +1,10 @@
 import { Worker, Job } from 'bullmq';
 import dbConnect from '../app/lib/db.connect';
 import Document from '../app/Model/Document';
+import {OpenAIEmbeddings} from "@langchain/openai"
+import {QdrantVectorStore} from "@langchain/qdrant";
+import {Document} from "@langchain/core/documents"
+import type {AttributeInfo} from "langchain/chains/query_constructor";
 
 const QUEUE_NAME = "file-upload-queue";
 

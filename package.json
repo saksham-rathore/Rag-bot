@@ -9,10 +9,14 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@langchain/core": "^1.1.45",
+    "@langchain/openai": "^1.4.5",
+    "@langchain/qdrant": "^1.0.2",
     "@pinecone-database/pinecone": "^7.2.0",
     "bcryptjs": "^3.0.3",
     "bullmq": "^5.76.6",
     "cloudinary": "^2.10.0",
+    "langchain": "^1.4.0",
     "mongoose": "^9.6.1",
     "next": "16.2.4",
     "next-auth": "^4.24.14",
