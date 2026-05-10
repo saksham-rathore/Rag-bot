@@ -6,6 +6,7 @@ import Chunk from "@/app/Model/Chunk";
 import NextAuth from "next-auth/next";
 import fs from "fs/promises"
 import pdf from "pdf-parse"
+import { Buffer } from "buffer";
 
 
 export async function POST(req: NextRequest) {

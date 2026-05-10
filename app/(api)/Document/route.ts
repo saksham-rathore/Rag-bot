@@ -8,8 +8,8 @@ import fs from "fs/promises";
 import { v2 as cloudinary } from "cloudinary";
 
 type CloudinaryUploadResult = {
-  secure_url: string
-}
+  secure_url: string;
+};
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -41,7 +41,7 @@ export async function POST(req: NextRequest) {
     const buffer = Buffer.from(bytes);
 
     // Upload to Cloudinary using upload_stream
-    const uploadResult = (await new Promise((resolve, reject) => {
+    const uploadResult = await new Promise((resolve, reject) => {
       const stream = cloudinary.uploader.upload_stream(
         { resource_type: "auto", public_id: file.name.split(".")[0] },
         (error, result) => {
@@ -50,7 +50,7 @@ export async function POST(req: NextRequest) {
         },
       );
       stream.end(buffer);
-    }))
+    });
 
     const fileUrl = (uploadResult as CloudinaryUploadResult).secure_url;
 
