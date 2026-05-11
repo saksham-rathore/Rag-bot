@@ -1,0 +1,19 @@
+import { QdrantVectorStore } from "@langchain/qdrant";
+import type { Embeddings } from "@langchain/core/embeddings";
+import type { Document } from "@langchain/core/documents";
+
+export async function storeDocumentsInQdrant(
+  docs: Document[],
+  embeddings: Embeddings
+) {
+  const vectorStore = await QdrantVectorStore.fromDocuments(
+    docs,
+    embeddings,
+    {
+      url: "http://localhost:6333",
+      collectionName: "pdf-docs",
+    }
+  );
+
+  return vectorStore;
+}
