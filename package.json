@@ -16,7 +16,7 @@
     "@pinecone-database/pinecone": "^7.2.0",
     "axios": "^1.16.0",
     "bcryptjs": "^3.0.3",
-    "bullmq": "^5.76.6",
+    "bullmq": "^5.76.8",
     "cloudinary": "^2.10.0",
     "langchain": "^1.4.0",
     "mongoose": "^9.6.1",
