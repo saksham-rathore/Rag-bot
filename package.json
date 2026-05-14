@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "dev:worker": "npx tsx --watch app/lib/Worker/message-worker.ts",
+    "dev:all": "concurrently \"npm run dev\" \"npm run dev:worker\"",
     "build": "next build",
     "start": "next start",
     "lint": "eslint"
