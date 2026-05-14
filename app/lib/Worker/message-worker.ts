@@ -15,17 +15,24 @@ const worker = new Worker(
     const data = JSON.parse(job.data);
 
     // 1. Download PDF
-    const response = await axios.get(data.fileUrl);
-
-    const loader = new PDFLoader(response.data);
+    const response = await axios.get(data.fileUrl, { responseType: 'arraybuffer' });
+    const blob = new Blob([response.data], { type: 'application/pdf' });
+    
+    const loader = new PDFLoader(blob);
     const docs = await loader.load();
+
+    // Attach documentId to metadata
+    const docsWithMetadata = docs.map(doc => {
+      doc.metadata = { ...doc.metadata, documentId: data.documentId };
+      return doc;
+    });
 
     // 2. Split into chunks
     const splitter = new RecursiveCharacterTextSplitter({
       chunkSize: 100,
       chunkOverlap: 0,
     });
-    const texts = await splitter.splitDocuments(docs);
+    const texts = await splitter.splitDocuments(docsWithMetadata);
 
     // 3. Create embeddings
     const embeddings = new OpenAIEmbeddings();

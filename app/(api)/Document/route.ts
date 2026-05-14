@@ -58,6 +58,7 @@ export async function POST(req: NextRequest) {
     await addFileJob({
       fileUrl: fileUrl,
       filename: file.name,
+      documentId: newDoc._id.toString(),
     });
 
     return NextResponse.json({
