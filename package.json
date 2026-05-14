@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "dev:worker": "npx tsx --watch app/lib/Worker/message-worker.ts",
     "build": "next build",
     "start": "next start",
     "lint": "eslint"
