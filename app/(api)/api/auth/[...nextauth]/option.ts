@@ -63,7 +63,11 @@ export const authOptions: AuthOptions = {
             throw new Error("Incorrect password");
           }
 
-          return user;
+          return {
+            id: user._id.toString(),
+            name: user.Username,
+            email: user.email,
+          };
         } catch (error) {
           throw new Error(
             error instanceof Error ? error.message : "Authentication failed",
@@ -78,8 +82,8 @@ export const authOptions: AuthOptions = {
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
-        token.id = user.id
-        token.email = user.email
+        token.id = user.id.toString();
+        token.email = user.email;
       }
       return token;
     },
