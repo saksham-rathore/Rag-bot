@@ -12,10 +12,9 @@ const worker = new Worker(
   async (job) => {
     console.log("Processing job:", job.name);
     console.log("Data:", job.data);
-    const data = JSON.parse(job.data);
 
     // 1. Download PDF
-    const response = await axios.get(data.fileUrl, { responseType: 'arraybuffer' });
+    const response = await axios.get(job.data.fileUrl, { responseType: 'arraybuffer' });
     const blob = new Blob([response.data], { type: 'application/pdf' });
     
     const loader = new PDFLoader(blob);
@@ -23,7 +22,7 @@ const worker = new Worker(
 
     // Attach documentId to metadata
     const docsWithMetadata = docs.map(doc => {
-      doc.metadata = { ...doc.metadata, documentId: data.documentId };
+      doc.metadata = { ...doc.metadata, documentId: job.data.documentId };
       return doc;
     });
 
@@ -60,6 +59,8 @@ const worker = new Worker(
   },
 );
 
+console.log("Worker started!")
+
 worker.on("completed", (job) => {
   console.log(`Job ${job.id} completed`);
 });
@@ -67,3 +68,5 @@ worker.on("completed", (job) => {
 worker.on("failed", (job, err) => {
   console.log(`Job ${job?.id} failed:`, err);
 });
+
+console.log("Worker is listening for jobs...")

@@ -21,19 +21,6 @@ export default function SignUp() {
     setError("");
 
     try {
-      // NOTE: Replace this with your actual signup API call
-      // const res = await fetch("/api/register", {
-      //   method: "POST",
-      //   headers: { "Content-Type": "application/json" },
-      //   body: JSON.stringify({ name, email, password }),
-      // });
-
-      // if (!res.ok) {
-      //   const data = await res.json();
-      //   throw new Error(data.message || "Something went wrong");
-      // }
-
-      // For now, redirect to signIn after successful mock signup
       router.push("/signIn");
     } catch (err: unknown) {
       if (err instanceof Error) {
