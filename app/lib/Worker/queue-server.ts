@@ -1,9 +1,6 @@
 import { Queue } from 'bullmq';
+import { redisConnection } from '../redis';
 
-const connection = {
-  host: '127.0.0.1',
-  port: 6379,
-};
-
-export const fileQueue = new Queue('file-queue', { connection });
-export const messageQueue = new Queue('message-queue', { connection });
+export const fileQueue = new Queue('file-queue', {
+  connection: redisConnection,
+});
