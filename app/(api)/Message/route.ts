@@ -46,8 +46,17 @@ export async function POST(req: NextRequest) {
       }
     );
 
-    // Retrieve the 4 most relevant document chunks
-    const searchResults = await vectorStore.similaritySearch(message, 4);
+    // Retrieve the 4 most relevant document chunks, filtered by this specific document
+    const searchResults = await vectorStore.similaritySearch(message, 4, {
+      must: [
+        {
+          key: "metadata.documentId",
+          match: {
+            value: documentId,
+          },
+        },
+      ],
+    });
     const contextText = searchResults.map((doc) => doc.pageContent).join("\n\n");
 
     // 5. Initialize Chat Model (LLM) and Generate Response
