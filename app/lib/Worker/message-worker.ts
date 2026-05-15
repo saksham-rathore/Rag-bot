@@ -7,7 +7,7 @@ import { DirectoryLoader } from "@langchain/classic/document_loaders/fs/director
 import { PDFLoader } from "@langchain/community/document_loaders/fs/pdf";
 import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters";
 import { QdrantVectorStore } from "@langchain/qdrant";
-import { OpenAIEmbeddings } from "@langchain/openai";
+import { GoogleGenerativeAIEmbeddings } from "@langchain/google-genai";
 import axios from "axios";
 
 const worker = new Worker(
@@ -46,8 +46,9 @@ const worker = new Worker(
     console.log("Step 3 DONE");
 
     // 3. Create embeddings
-    const embeddings = new OpenAIEmbeddings({
-      openAIApiKey: process.env.OPEN_AI_SECRET_KEY,
+    const embeddings = new GoogleGenerativeAIEmbeddings({
+      apiKey: process.env.GEMINI_API_KEY,
+      modelName: "text-embedding-004",
     });
     console.log("Step 4: Embeddings");
 
