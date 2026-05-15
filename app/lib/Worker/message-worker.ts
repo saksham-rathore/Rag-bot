@@ -1,3 +1,6 @@
+import { loadEnvConfig } from "@next/env";
+loadEnvConfig(process.cwd());
+
 import { Worker } from "bullmq";
 import { redisConnection } from "../redis";
 import { DirectoryLoader } from "@langchain/classic/document_loaders/fs/directory";
@@ -19,6 +22,7 @@ const worker = new Worker(
       responseType: "arraybuffer",
     });
     console.log("Step 1 DONE");
+    
 
     console.log("Step 2: Loading PDF");
     const blob = new Blob([response.data], { type: "application/pdf" });
@@ -42,7 +46,9 @@ const worker = new Worker(
     console.log("Step 3 DONE");
 
     // 3. Create embeddings
-    const embeddings = new OpenAIEmbeddings();
+    const embeddings = new OpenAIEmbeddings({
+      openAIApiKey: process.env.OPEN_AI_SECRET_KEY,
+    });
     console.log("Step 4: Embeddings");
 
     // 3 & 4. Create embeddings and store in DB
@@ -58,11 +64,9 @@ const worker = new Worker(
   },
   {
     concurrency: 2,
-    connection: {
-      host: "localhost",
-      port: 6379,
-    },
+    connection: redisConnection,
     lockDuration: 600000,
+    maxStalledCount: 5,
   },
 );
 
