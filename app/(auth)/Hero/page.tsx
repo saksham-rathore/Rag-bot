@@ -21,18 +21,21 @@ export default function HeroPage() {
     role: string;
   };
 
+  type Session = {
+    id: number;
+    name: string;
+    messages: Message[];
+  };
+
   const [Message, setMessage] = useState<Message[]>([]);
-  const [Textarea, setTextarea] = useState([]);
   const [Input, setInput] = useState("");
   const [File, setFile] = useState<File | null>(null);
-  const [Processing, setProcessing] = useState(false);
-  const [Recentsession, setRecentsession] = useState<string[]>([
-    "Q3 Financial Report Analysis",
-    "Onboarding Documentation",
-    "API Integration Specs",
-  ]);
+  const [sessions, setSessions] = useState<Session[]>([]);
+  const [activeSessionId, setActiveSessionId] = useState<number | null>(null);
+
   const fileInputRef = useRef<HTMLInputElement>(null);
   const messageIdRef = useRef(0);
+  const sessionIdRef = useRef(0);
 
   const handleSend = (e?: React.FormEvent) => {
     e?.preventDefault();
@@ -53,10 +56,50 @@ export default function HeroPage() {
     removeFile();
   };
 
-  const handleClearChat = () => {
+  // Save current chat as a session and start fresh
+  const handleNewSession = () => {
+    if (Message.length === 0) return; // nothing to save
+
+    const sessionName =
+      Message.find((m) => m.role === "user")?.text.slice(0, 35) ??
+      "New Session";
+
+    const newSession: Session = {
+      id: ++sessionIdRef.current,
+      name: sessionName,
+      messages: Message,
+    };
+
+    setSessions((prev) => [newSession, ...prev]);
+    setActiveSessionId(newSession.id);
     setMessage([]);
     setInput("");
-    setFile(null);
+    removeFile();
+  };
+
+  // Load a past session back into the chat
+  const loadSession = (session: Session) => {
+    // Save whatever is currently in the chat before switching
+    if (Message.length > 0 && activeSessionId !== session.id) {
+      const currentName =
+        Message.find((m) => m.role === "user")?.text.slice(0, 35) ??
+        "Unsaved Session";
+      const current: Session = {
+        id: activeSessionId ?? ++sessionIdRef.current,
+        name: currentName,
+        messages: Message,
+      };
+      setSessions((prev) =>
+        prev.some((s) => s.id === current.id)
+          ? prev.map((s) => (s.id === current.id ? current : s))
+          : [current, ...prev]
+      );
+    }
+
+    setMessage(session.messages);
+    setActiveSessionId(session.id);
+    setInput("");
+    removeFile();
   };
 
   const handleclick = () => {
@@ -96,7 +139,7 @@ export default function HeroPage() {
 
         <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">
           <button
-            onClick={handleClearChat}
+            onClick={handleNewSession}
             className="w-full flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-3 rounded-xl transition-all shadow-lg shadow-indigo-600/20 font-medium mb-6 hover:scale-[1.02] active:scale-[0.98]"
           >
             <Plus />
@@ -107,19 +150,25 @@ export default function HeroPage() {
             Recent Sessions
           </div>
           <div className="space-y-1">
-            {/* Static Example Sessions */}
-            <button className="w-full text-left px-3 py-2.5 rounded-lg hover:bg-neutral-800 transition-colors text-sm text-neutral-300 truncate group flex items-center gap-3">
-              <Messageicon />
-              <span className="truncate">Q3 Financial Report Analysis</span>
-            </button>
-            <button className="w-full text-left px-3 py-2.5 rounded-lg hover:bg-neutral-800 transition-colors text-sm text-neutral-300 truncate group flex items-center gap-3">
-              <Messageicon />
-              <span className="truncate">Onboarding Documentation</span>
-            </button>
-            <button className="w-full text-left px-3 py-2.5 rounded-lg hover:bg-neutral-800 transition-colors text-sm text-neutral-300 truncate group flex items-center gap-3">
-              <Messageicon />
-              <span className="truncate">API Integration Specs</span>
-            </button>
+            {sessions.length === 0 && (
+              <p className="text-xs text-neutral-600 px-3 py-2">
+                No saved sessions yet.
+              </p>
+            )}
+            {sessions.map((session) => (
+              <button
+                key={session.id}
+                onClick={() => loadSession(session)}
+                className={`w-full text-left px-3 py-2.5 rounded-lg transition-colors text-sm truncate group flex items-center gap-3 ${
+                  activeSessionId === session.id
+                    ? "bg-neutral-800 text-white"
+                    : "hover:bg-neutral-800 text-neutral-300"
+                }`}
+              >
+                <Messageicon />
+                <span className="truncate">{session.name}</span>
+              </button>
+            ))}
           </div>
         </div>
 
