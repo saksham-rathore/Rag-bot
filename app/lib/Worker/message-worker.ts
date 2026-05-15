@@ -8,7 +8,7 @@ import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters";
 import { GoogleGenerativeAIEmbeddings } from "@langchain/google-genai";
 import { QdrantClient } from "@qdrant/js-client-rest";
 import axios from "axios";
-import crypto from "crypto";
+// import crypto from "crypto";
 
 const COLLECTION_NAME = "langchainjs-testing";
 const VECTOR_SIZE = 3072; // gemini-embedding-2 output dimension
