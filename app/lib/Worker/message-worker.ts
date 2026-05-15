@@ -3,12 +3,15 @@ loadEnvConfig(process.cwd());
 
 import { Worker } from "bullmq";
 import { redisConnection } from "../redis";
-import { DirectoryLoader } from "@langchain/classic/document_loaders/fs/directory";
 import { PDFLoader } from "@langchain/community/document_loaders/fs/pdf";
 import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters";
-import { QdrantVectorStore } from "@langchain/qdrant";
 import { GoogleGenerativeAIEmbeddings } from "@langchain/google-genai";
+import { QdrantClient } from "@qdrant/js-client-rest";
 import axios from "axios";
+import crypto from "crypto";
+
+const COLLECTION_NAME = "langchainjs-testing";
+const VECTOR_SIZE = 3072; // gemini-embedding-2 output dimension
 
 const worker = new Worker(
   "file-queue",
@@ -22,8 +25,8 @@ const worker = new Worker(
       responseType: "arraybuffer",
     });
     console.log("Step 1 DONE");
-    
 
+    // 2. Load PDF
     console.log("Step 2: Loading PDF");
     const blob = new Blob([response.data], { type: "application/pdf" });
     const loader = new PDFLoader(blob);
@@ -36,30 +39,57 @@ const worker = new Worker(
       return doc;
     });
 
-    // 2. Split into chunks
+    // 3. Split into chunks
     const splitter = new RecursiveCharacterTextSplitter({
-      chunkSize: 100,
-      chunkOverlap: 0,
+      chunkSize: 1000,
+      chunkOverlap: 200,
     });
     console.log("Step 3: Chunking");
     const texts = await splitter.splitDocuments(docsWithMetadata);
-    console.log("Step 3 DONE");
+    console.log(`Step 3 DONE - ${texts.length} chunks`);
 
-    // 3. Create embeddings
+    // 4. Create embeddings
+    console.log("Step 4: Embedding");
     const embeddings = new GoogleGenerativeAIEmbeddings({
       apiKey: process.env.GEMINI_API_KEY,
       modelName: "gemini-embedding-2",
     });
-    console.log("Step 4: Embeddings");
+    const vectors = await embeddings.embedDocuments(
+      texts.map((t) => t.pageContent)
+    );
+    console.log("Step 4 DONE");
 
-    // 3 & 4. Create embeddings and store in DB
-    console.log("Step 4: Embedding + Qdrant");
-    await QdrantVectorStore.fromDocuments(texts, embeddings, {
+    // 5. Upload to Qdrant directly (bypasses @langchain/qdrant bug)
+    console.log("Step 5: Uploading to Qdrant");
+    const client = new QdrantClient({
       url: process.env.QDRANT_ENDPOINT_KEY,
       apiKey: process.env.QDRANT_API_KEY,
-      collectionName: "langchainjs-testing",
     });
-    console.log("Step 4 DONE");
+
+    // Ensure collection exists
+    const collections = await client.getCollections();
+    const exists = collections.collections.some(
+      (c) => c.name === COLLECTION_NAME
+    );
+    if (!exists) {
+      await client.createCollection(COLLECTION_NAME, {
+        vectors: { size: VECTOR_SIZE, distance: "Cosine" },
+      });
+      console.log(`Created collection: ${COLLECTION_NAME}`);
+    }
+
+    // Upload points
+    const points = vectors.map((vector, i) => ({
+      id: crypto.randomUUID(),
+      vector,
+      payload: {
+        pageContent: texts[i].pageContent,
+        ...texts[i].metadata,
+      },
+    }));
+
+    await client.upsert(COLLECTION_NAME, { points });
+    console.log(`Step 5 DONE - uploaded ${points.length} vectors`);
 
     console.log("Job completed");
   },
