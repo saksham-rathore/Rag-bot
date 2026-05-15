@@ -16,9 +16,11 @@ const worker = new Worker(
     // 1. Download PDF
     const response = await axios.get(job.data.fileUrl, { responseType: 'arraybuffer' });
     const blob = new Blob([response.data], { type: 'application/pdf' });
+    console.log("Step 1: Downloading PDF");
     
     const loader = new PDFLoader(blob);
     const docs = await loader.load();
+    console.log("Step 2: Loading PDF");
 
     // Attach documentId to metadata
     const docsWithMetadata = docs.map(doc => {
@@ -32,9 +34,11 @@ const worker = new Worker(
       chunkOverlap: 0,
     });
     const texts = await splitter.splitDocuments(docsWithMetadata);
+    console.log("Step 3: Chunking");
 
     // 3. Create embeddings
     const embeddings = new OpenAIEmbeddings();
+    console.log("Step 4: Embeddings");
     
     // 3 & 4. Create embeddings and store in DB
     await QdrantVectorStore.fromDocuments(
@@ -46,16 +50,17 @@ const worker = new Worker(
         collectionName: "langchainjs-testing",
       },
     );
-
-    await new Promise((res) => setTimeout(res, 3000));
+    console.log("Step 5: Upload to Qdrant");
 
     console.log("Job completed");
   },
   {
+    concurrency: 2,
     connection: {
       host: "localhost",
       port: 6379,
     },
+    lockDuration: 600000,
   },
 );
 
