@@ -35,12 +35,12 @@ export default function HeroPage() {
 
   const handleSend = (e?: React.FormEvent) => {
     e?.preventDefault();
-    if (!Input.trim()) return;
+    if (!Input.trim() && !File) return;
 
     const newMessage = {
       id: Date.now(),
       role: "user",
-      text: Input,
+      text: Input || (File ? `Attached File: ${File.name}` : ""),
       timestamp: new Date().toLocaleTimeString("en-IN", {
         hour: "2-digit",
         minute: "2-digit",
@@ -49,6 +49,7 @@ export default function HeroPage() {
     };
     setMessage((prev) => [...prev, newMessage]);
     setInput("");
+    removeFile();
   };
 
   const handleClearChat = () => {
@@ -59,6 +60,19 @@ export default function HeroPage() {
 
   const handleclick = () => {
     fileInputRef.current?.click();
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      setFile(e.target.files[0]);
+    }
+  };
+
+  const removeFile = () => {
+    setFile(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
   };
 
   return (
@@ -194,6 +208,32 @@ export default function HeroPage() {
               onSubmit={handleSend}
               className="relative bg-neutral-900/80 backdrop-blur-xl border border-neutral-700/80 rounded-2xl shadow-2xl transition-all duration-300 focus-within:border-indigo-500/70 focus-within:ring-4 focus-within:ring-indigo-500/10 focus-within:bg-neutral-900"
             >
+              <input
+                type="file"
+                ref={fileInputRef}
+                onChange={handleFileChange}
+                className="hidden"
+                accept=".pdf,image/*"
+              />
+
+              {File && (
+                <div className="pt-3 px-3 flex items-center gap-2">
+                  <div className="bg-neutral-800/80 border border-neutral-700 px-3 py-1.5 rounded-xl flex items-center gap-2 max-w-xs shadow-sm">
+                    <div className="text-indigo-400">
+                      {File.type.startsWith("image/") ? <ImageIcon /> : <FileIcon />}
+                    </div>
+                    <span className="text-sm text-neutral-300 truncate font-medium">{File.name}</span>
+                    <button
+                      type="button"
+                      onClick={removeFile}
+                      className="text-neutral-500 hover:text-red-400 transition-colors ml-1 p-1 rounded-md hover:bg-neutral-700/50"
+                    >
+                      <XIcon />
+                    </button>
+                  </div>
+                </div>
+              )}
+
               <div className="flex items-end p-2 gap-2">
                 <button
                   onClick={handleclick}
