@@ -32,13 +32,14 @@ export default function HeroPage() {
     "API Integration Specs",
   ]);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const messageIdRef = useRef(0);
 
   const handleSend = (e?: React.FormEvent) => {
     e?.preventDefault();
     if (!Input.trim() && !File) return;
 
     const newMessage = {
-      id: Date.now(),
+      id: ++messageIdRef.current,
       role: "user",
       text: Input || (File ? `Attached File: ${File.name}` : ""),
       timestamp: new Date().toLocaleTimeString("en-IN", {
@@ -220,9 +221,15 @@ export default function HeroPage() {
                 <div className="pt-3 px-3 flex items-center gap-2">
                   <div className="bg-neutral-800/80 border border-neutral-700 px-3 py-1.5 rounded-xl flex items-center gap-2 max-w-xs shadow-sm">
                     <div className="text-indigo-400">
-                      {File.type.startsWith("image/") ? <ImageIcon /> : <FileIcon />}
+                      {File.type.startsWith("image/") ? (
+                        <ImageIcon />
+                      ) : (
+                        <FileIcon />
+                      )}
                     </div>
-                    <span className="text-sm text-neutral-300 truncate font-medium">{File.name}</span>
+                    <span className="text-sm text-neutral-300 truncate font-medium">
+                      {File.name}
+                    </span>
                     <button
                       type="button"
                       onClick={removeFile}
