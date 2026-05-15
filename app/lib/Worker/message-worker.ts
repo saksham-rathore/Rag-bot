@@ -36,16 +36,16 @@ const worker = new Worker(
     // 3. Create embeddings
     const embeddings = new OpenAIEmbeddings();
     
-    const vectorStore = await QdrantVectorStore.fromExistingCollection(
+    // 3 & 4. Create embeddings and store in DB
+    await QdrantVectorStore.fromDocuments(
+      texts,
       embeddings,
       {
-        url: process.env.QDRANT_URL,
+        url: process.env.QDRANT_ENDPOINT_KEY,
+        apiKey: process.env.QDRANT_API_KEY,
         collectionName: "langchainjs-testing",
       },
     );
-
-    // 4. Store in DB
-    await vectorStore.addDocuments(texts);
 
     await new Promise((res) => setTimeout(res, 3000));
 
@@ -59,7 +59,6 @@ const worker = new Worker(
   },
 );
 
-console.log("Worker started!")
 
 worker.on("completed", (job) => {
   console.log(`Job ${job.id} completed`);
@@ -69,4 +68,5 @@ worker.on("failed", (job, err) => {
   console.log(`Job ${job?.id} failed:`, err);
 });
 
+console.log("Worker started!")
 console.log("Worker is listening for jobs...")

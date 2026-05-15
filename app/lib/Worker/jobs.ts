@@ -6,5 +6,4 @@ export async function addFileJob(data: {
   documentId: string;
 }) {
   await fileQueue.add('file-ready', data);
-  await fileQueue.add('test', { msg: 'hello' });
 }
