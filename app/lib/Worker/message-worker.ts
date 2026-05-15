@@ -48,7 +48,7 @@ const worker = new Worker(
     // 3. Create embeddings
     const embeddings = new GoogleGenerativeAIEmbeddings({
       apiKey: process.env.GEMINI_API_KEY,
-      modelName: "text-embedding-004",
+      modelName: "gemini-embedding-2",
     });
     console.log("Step 4: Embeddings");
 
