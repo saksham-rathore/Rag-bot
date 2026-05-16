@@ -1,15 +1,18 @@
 import { NextResponse } from "next/server";
-import { NextRequest } from "next/server";
-import { getToken } from "next-auth/jwt";
+import type { NextRequest } from "next/server";
 
-export async function middleware(request: NextRequest) {
-  const token = await getToken({ req: request, secret: process.env.AUTH_SECRET });
-  const url = request.nextUrl;
+export function middleware(request: NextRequest) {
+  const { pathname } = request.nextUrl;
 
-  // If already signed in, redirect away from auth pages
+  // Check NextAuth session cookie (works in Edge runtime without importing next-auth/jwt)
+  const sessionToken =
+    request.cookies.get("__Secure-next-auth.session-token")?.value ||
+    request.cookies.get("next-auth.session-token")?.value;
+
+  // If already signed in, redirect away from auth pages to Dashboard
   if (
-    token &&
-    (url.pathname.startsWith("/signIn") || url.pathname.startsWith("/signup"))
+    sessionToken &&
+    (pathname.startsWith("/signIn") || pathname.startsWith("/signup"))
   ) {
     return NextResponse.redirect(new URL("/Dashboard", request.url));
   }

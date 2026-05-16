@@ -18,7 +18,7 @@ export default function SignUp() {
   // Redirect if already signed in
   useEffect(() => {
     if (session) {
-      router.push("/");
+      router.push("/Dashboard");
     }
   }, [session, router]);
 
@@ -41,8 +41,18 @@ export default function SignUp() {
         return;
       }
 
-      // Registration successful — redirect to sign in
-      router.push("/Dashboard");
+      // Registration successful — auto sign in and go to Dashboard
+      const signInRes = await signIn("credentials", {
+        email,
+        password,
+        redirect: false,
+      });
+
+      if (signInRes?.error) {
+        router.push("/signIn");
+      } else {
+        router.push("/Dashboard");
+      }
     } catch (err: unknown) {
       if (err instanceof Error) {
         setError(err.message);

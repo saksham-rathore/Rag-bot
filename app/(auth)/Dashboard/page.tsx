@@ -1,5 +1,7 @@
 "use client";
 import React, { useState, useRef, useEffect } from "react";
+import { useSession, signOut } from "next-auth/react";
+import { useRouter } from "next/navigation";
 import {
   BotIcon,
   PaperclipIcon,
@@ -13,6 +15,8 @@ import {
 } from "@/app/components/Svg";
 
 export default function DashboardPage() {
+  const { data: session } = useSession();
+  const router = useRouter();
   const [messages, setMessages] = useState<
     {
       id: number;
@@ -200,11 +204,40 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        <div className="p-4 border-t border-neutral-800">
+        {/* Sidebar Bottom — Auth Button */}
+        <div className="p-4 border-t border-neutral-800 space-y-2">
           <button className="w-full flex items-center gap-3 hover:bg-neutral-800 px-3 py-2.5 rounded-lg transition-colors text-sm text-neutral-300">
             <SettingsIcon />
             <span>Settings</span>
           </button>
+
+          {session ? (
+            // User is signed in — show Sign Out
+            <button
+              onClick={() => signOut({ callbackUrl: "/signIn" })}
+              className="w-full flex items-center gap-3 hover:bg-red-500/10 px-3 py-2.5 rounded-lg transition-colors text-sm text-red-400 hover:text-red-300"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                <polyline points="16 17 21 12 16 7" />
+                <line x1="21" y1="12" x2="9" y2="12" />
+              </svg>
+              <span>Sign Out</span>
+            </button>
+          ) : (
+            // User is not signed in — show Sign In
+            <button
+              onClick={() => router.push("/signIn")}
+              className="w-full flex items-center gap-3 hover:bg-indigo-500/10 px-3 py-2.5 rounded-lg transition-colors text-sm text-indigo-400 hover:text-indigo-300"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" />
+                <polyline points="10 17 15 12 10 7" />
+                <line x1="15" y1="12" x2="3" y2="12" />
+              </svg>
+              <span>Sign In</span>
+            </button>
+          )}
         </div>
       </div>
 
@@ -396,7 +429,7 @@ export default function DashboardPage() {
                     }
                   }}
                   placeholder="Ask a question or upload a document for RAG context..."
-                  className="flex-1 max-h-40 min-h-[44px] bg-transparent border-none focus:ring-0 resize-none py-3 px-2 text-neutral-100 placeholder:text-neutral-500 scrollbar-thin text-[15px]"
+                  className="flex-1 max-h-40 min-h-[44px] bg-transparent border-none outline-none focus:outline-none focus:ring-0 resize-none py-3 px-2 text-neutral-100 placeholder:text-neutral-500 scrollbar-thin text-[15px]"
                   rows={1}
                   style={{
                     height: "auto",
@@ -406,7 +439,7 @@ export default function DashboardPage() {
                 <button
                   type="submit"
                   disabled={(!input.trim() && !file) || isProcessing}
-                  className="p-3 bg-white text-black hover:bg-indigo-50 hover:text-indigo-600 disabled:bg-neutral-800 disabled:text-neutral-600 rounded-xl transition-all shrink-0 font-medium mb-0.5 mr-0.5 shadow-sm active:scale-95"
+                  className="p-3 bg-indigo-600 text-white hover:bg-indigo-500 disabled:bg-neutral-800 disabled:text-neutral-600 rounded-xl transition-all shrink-0 font-medium mb-0.5 mr-0.5 shadow-sm active:scale-95"
                 >
                   <SendIcon />
                 </button>

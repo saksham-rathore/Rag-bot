@@ -1,1 +1,14 @@
 @import "tailwindcss";
+
+textarea {
+  outline: none;
+  border: none;
+  box-shadow: none;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+textarea:focus {
+  outline: none;
+  box-shadow: none;
+}
