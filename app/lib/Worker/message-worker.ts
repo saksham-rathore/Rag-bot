@@ -5,12 +5,34 @@ import { Worker } from "bullmq";
 import { redisConnection } from "../redis";
 import { PDFLoader } from "@langchain/community/document_loaders/fs/pdf";
 import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters";
-import { GoogleGenerativeAIEmbeddings } from "@langchain/google-genai";
+import { GoogleGenAI } from "@google/genai";
 import { QdrantClient } from "@qdrant/js-client-rest";
 import axios from "axios";
 
-const COLLECTION_NAME = "langchainjs-testing";
-const VECTOR_SIZE = 768; // text-embedding-004 output dimension
+const COLLECTION_NAME = "langchainjs-cohere";
+const VECTOR_SIZE = 1024; // Cohere embed-english-v3.0 output dimension
+
+async function embedDocuments(apiKey: string, texts: string[]): Promise<number[][]> {
+  const res = await fetch("https://api.cohere.com/v1/embed", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      model: "embed-english-v3.0",
+      texts: texts,
+      input_type: "search_document",
+    }),
+  });
+
+  if (!res.ok) {
+    const err = await res.text();
+    throw new Error(`Cohere Embed failed (${res.status}): ${err}`);
+  }
+  const data = await res.json();
+  return data.embeddings;
+}
 
 const worker = new Worker(
   "file-queue",
@@ -47,15 +69,8 @@ const worker = new Worker(
     const texts = await splitter.splitDocuments(docsWithMetadata);
     console.log(`Step 3 DONE - ${texts.length} chunks`);
 
-    // 4. Create embeddings
     console.log("Step 4: Embedding");
-    const embeddings = new GoogleGenerativeAIEmbeddings({
-      apiKey: process.env.GEMINI_API_KEY,
-      modelName: "embedding-001",
-    });
-    const vectors = await embeddings.embedDocuments(
-      texts.map((t) => t.pageContent)
-    );
+    const vectors = await embedDocuments(process.env.COHERE_API_KEY!, texts.map((t) => t.pageContent));
     console.log("Step 4 DONE");
 
     // 5. Upload to Qdrant directly (bypasses @langchain/qdrant bug)

@@ -3,9 +3,30 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/app/(api)/api/auth/[...nextauth]/option";
 import dbConnect from "@/app/lib/db.connect";
 import Message from "@/app/Model/Message";
-import { GoogleGenerativeAIEmbeddings } from "@langchain/google-genai";
-import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
 import { QdrantClient } from "@qdrant/js-client-rest";
+import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
+
+async function embedText(apiKey: string, text: string): Promise<number[]> {
+  const res = await fetch("https://api.cohere.com/v1/embed", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      model: "embed-english-v3.0",
+      texts: [text],
+      input_type: "search_query",
+    }),
+  });
+
+  if (!res.ok) {
+    const err = await res.text();
+    throw new Error(`Cohere Embed failed (${res.status}): ${err}`);
+  }
+  const data = await res.json();
+  return data.embeddings[0];
+}
 
 export async function POST(req: NextRequest) {
   try {
@@ -24,7 +45,7 @@ export async function POST(req: NextRequest) {
     if (!message || !documentId) {
       return NextResponse.json(
         { error: "message and documentId are required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -36,20 +57,15 @@ export async function POST(req: NextRequest) {
       content: message,
     });
 
-    // 4. Initialize Embeddings & Search Qdrant for Context
-    const embeddings = new GoogleGenerativeAIEmbeddings({
-      apiKey: process.env.GEMINI_API_KEY,
-      model: "embedding-001",
-    });
-
-    const queryVector = await embeddings.embedQuery(message);
+    // 4. Embed query using Cohere
+    const queryVector = await embedText(process.env.COHERE_API_KEY!, message);
 
     const qdrant = new QdrantClient({
       url: process.env.QDRANT_ENDPOINT_KEY,
       apiKey: process.env.QDRANT_API_KEY,
     });
 
-    const searchResults = await qdrant.search("langchainjs-testing", {
+    const searchResults = await qdrant.search("langchainjs-cohere", {
       vector: queryVector,
       limit: 4,
       with_payload: true,
@@ -101,13 +117,9 @@ ${contextText}`;
       message: aiMessageContent,
       messageId: savedAiMessage._id,
     });
-
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     console.error("Message API Error:", message);
-    return NextResponse.json(
-      { error: message },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }
