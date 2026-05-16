@@ -23,7 +23,7 @@ async function embedText(apiKey: string, text: string): Promise<number[]> {
           ],
         },
       }),
-    }
+    },
   );
 
   if (!res.ok) {

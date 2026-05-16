@@ -16,7 +16,7 @@ async function embedDocuments(
   apiKey: string,
   texts: string[],
 ): Promise<number[][]> {
-  const genAI = new GoogleGenerativeAI(apiKey);
+  const genAI = new GoogleGenerativeAI("AIzaSyBtNzDclo4-TVUT24Y6FRdB9uDwo07Ae4I");
 
   return await Promise.all(
     texts.map(async (text) => {
@@ -56,7 +56,7 @@ const worker = new Worker(
     // Attach documentId to metadata
     const docsWithMetadata = docs.map((doc) => {
       doc.metadata = { ...doc.metadata, documentId: job.data.documentId };
-      return doc;
+      return doc
     });
 
     // 3. Split into chunks
