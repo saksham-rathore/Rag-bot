@@ -3,9 +3,9 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/app/(api)/api/auth/[...nextauth]/option";
 import dbConnect from "@/app/lib/db.connect";
 import Message from "@/app/Model/Message";
-import { OpenAIEmbeddings } from "@langchain/openai";
-import { QdrantVectorStore } from "@langchain/qdrant";
-import { ChatOpenAI } from "@langchain/openai";
+import { GoogleGenerativeAIEmbeddings } from "@langchain/google-genai";
+import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
+import { QdrantClient } from "@qdrant/js-client-rest";
 
 export async function POST(req: NextRequest) {
   try {
@@ -36,32 +36,41 @@ export async function POST(req: NextRequest) {
       content: message,
     });
 
-    // 4. Initialize Vector Store & Get Context
-    const embeddings = new OpenAIEmbeddings();
-    const vectorStore = await QdrantVectorStore.fromExistingCollection(
-      embeddings,
-      {
-        url: process.env.QDRANT_URL,
-        collectionName: "langchainjs-testing",
-      }
-    );
-
-    // Retrieve the 4 most relevant document chunks, filtered by this specific document
-    const searchResults = await vectorStore.similaritySearch(message, 4, {
-      must: [
-        {
-          key: "metadata.documentId",
-          match: {
-            value: documentId,
-          },
-        },
-      ],
+    // 4. Initialize Embeddings & Search Qdrant for Context
+    const embeddings = new GoogleGenerativeAIEmbeddings({
+      apiKey: process.env.GEMINI_API_KEY,
+      model: "embedding-001",
     });
-    const contextText = searchResults.map((doc) => doc.pageContent).join("\n\n");
 
-    // 5. Initialize Chat Model (LLM) and Generate Response
-    const chatModel = new ChatOpenAI({
-      modelName: "gpt-3.5-turbo",
+    const queryVector = await embeddings.embedQuery(message);
+
+    const qdrant = new QdrantClient({
+      url: process.env.QDRANT_ENDPOINT_KEY,
+      apiKey: process.env.QDRANT_API_KEY,
+    });
+
+    const searchResults = await qdrant.search("langchainjs-testing", {
+      vector: queryVector,
+      limit: 4,
+      with_payload: true,
+      filter: {
+        must: [
+          {
+            key: "documentId",
+            match: { value: documentId },
+          },
+        ],
+      },
+    });
+
+    const contextText = searchResults
+      .map((r) => r.payload?.pageContent as string)
+      .filter(Boolean)
+      .join("\n\n");
+
+    // 5. Generate Response with Gemini
+    const chatModel = new ChatGoogleGenerativeAI({
+      model: "gemini-1.5-flash",
       temperature: 0.5,
     });
 
@@ -94,9 +103,10 @@ ${contextText}`;
     });
 
   } catch (error) {
-    console.error("Message API Error:", error);
+    const message = error instanceof Error ? error.message : String(error);
+    console.error("Message API Error:", message);
     return NextResponse.json(
-      { error: "Something went wrong while processing the message" },
+      { error: message },
       { status: 500 }
     );
   }

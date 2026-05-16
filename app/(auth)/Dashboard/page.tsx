@@ -41,6 +41,7 @@ export default function DashboardPage() {
   const [file, setFile] = useState<File | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [documentId, setDocumentId] = useState<string | null>(null);
   const [recentSessions, setRecentSessions] = useState<string[]>([
     "Q3 Financial Report Analysis",
     "Onboarding Documentation",
@@ -58,15 +59,18 @@ export default function DashboardPage() {
     scrollToBottom();
   }, [messages, isProcessing]);
 
-  const handleSend = (e?: React.FormEvent) => {
+  const handleSend = async (e?: React.FormEvent) => {
     e?.preventDefault();
     if (!input.trim() && !file) return;
+
+    const userText = input;
+    const userFile = file;
 
     const newMessage = {
       id: Date.now(),
       role: "user",
-      text: input,
-      file: file ? file.name : null,
+      text: userText,
+      file: userFile ? userFile.name : null,
       timestamp: new Date().toLocaleTimeString([], {
         hour: "2-digit",
         minute: "2-digit",
@@ -83,20 +87,73 @@ export default function DashboardPage() {
       textareaRef.current.style.height = "auto";
     }
 
-    // Simulate RAG bot processing and response
-    setTimeout(() => {
+    try {
+      let activeDocumentId = documentId;
+
+      // Step 1: If a file was attached, upload it first
+      if (userFile) {
+        const formData = new FormData();
+        formData.append("file", userFile);
+
+        const uploadRes = await fetch("/Document", {
+          method: "POST",
+          body: formData,
+        });
+
+        const uploadData = await uploadRes.json();
+
+        if (!uploadRes.ok) {
+          throw new Error(uploadData.error || "File upload failed");
+        }
+
+        activeDocumentId = uploadData.DocumentId;
+        setDocumentId(activeDocumentId);
+      }
+
+      // Step 2: Send the message to the RAG API
+      if (!activeDocumentId) {
+        throw new Error("Please upload a document before sending a message.");
+      }
+
+      const msgRes = await fetch("/Message", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: userText, documentId: activeDocumentId }),
+      });
+
+      const msgData = await msgRes.json();
+
+      if (!msgRes.ok) {
+        throw new Error(msgData.error || "Failed to get a response");
+      }
+
       const botResponse = {
         id: Date.now() + 1,
         role: "assistant",
-        text: "I have analyzed your query based on the provided context. This is a simulated response demonstrating the RAG capabilities. In a production environment, this would integrate with your vector database and LLM backend.",
+        text: msgData.message,
         timestamp: new Date().toLocaleTimeString([], {
           hour: "2-digit",
           minute: "2-digit",
         }),
       };
       setMessages((prev) => [...prev, botResponse]);
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : "An unexpected error occurred.";
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: Date.now() + 1,
+          role: "assistant",
+          text: `⚠️ ${errorMessage}`,
+          timestamp: new Date().toLocaleTimeString([], {
+            hour: "2-digit",
+            minute: "2-digit",
+          }),
+        },
+      ]);
+    } finally {
       setIsProcessing(false);
-    }, 2000);
+    }
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {

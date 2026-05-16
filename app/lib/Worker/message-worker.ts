@@ -8,10 +8,9 @@ import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters";
 import { GoogleGenerativeAIEmbeddings } from "@langchain/google-genai";
 import { QdrantClient } from "@qdrant/js-client-rest";
 import axios from "axios";
-// import crypto from "crypto";
 
 const COLLECTION_NAME = "langchainjs-testing";
-const VECTOR_SIZE = 3072; // gemini-embedding-2 output dimension
+const VECTOR_SIZE = 768; // text-embedding-004 output dimension
 
 const worker = new Worker(
   "file-queue",
@@ -52,7 +51,7 @@ const worker = new Worker(
     console.log("Step 4: Embedding");
     const embeddings = new GoogleGenerativeAIEmbeddings({
       apiKey: process.env.GEMINI_API_KEY,
-      modelName: "gemini-embedding-2",
+      modelName: "embedding-001",
     });
     const vectors = await embeddings.embedDocuments(
       texts.map((t) => t.pageContent)
