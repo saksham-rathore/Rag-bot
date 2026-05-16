@@ -7,25 +7,34 @@ import { QdrantClient } from "@qdrant/js-client-rest";
 import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
 
 async function embedText(apiKey: string, text: string): Promise<number[]> {
-  const res = await fetch("https://api.cohere.com/v1/embed", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      model: "embed-english-v3.0",
-      texts: [text],
-      input_type: "search_query",
-    }),
-  });
+  const res = await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/gemini-embedding-001:embedContent?key=${apiKey}`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        content: {
+          parts: [
+            {
+              text: text,
+            },
+          ],
+        },
+      }),
+    }
+  );
 
   if (!res.ok) {
     const err = await res.text();
-    throw new Error(`Cohere Embed failed (${res.status}): ${err}`);
+    console.error("FULL ERROR:", err);
+    throw new Error(`Gemini Embed failed (${res.status}): ${err}`);
   }
+
   const data = await res.json();
-  return data.embeddings[0];
+
+  return data.embedding.values;
 }
 
 export async function POST(req: NextRequest) {
@@ -57,15 +66,15 @@ export async function POST(req: NextRequest) {
       content: message,
     });
 
-    // 4. Embed query using Cohere
-    const queryVector = await embedText(process.env.COHERE_API_KEY!, message);
+    // 4. Embed query using Gemini
+    const queryVector = await embedText(process.env.GEMINI_API_KEY!, message);
 
     const qdrant = new QdrantClient({
       url: process.env.QDRANT_ENDPOINT_KEY,
       apiKey: process.env.QDRANT_API_KEY,
     });
 
-    const searchResults = await qdrant.search("langchainjs-cohere", {
+    const searchResults = await qdrant.search("langchainjs-gemini", {
       vector: queryVector,
       limit: 4,
       with_payload: true,

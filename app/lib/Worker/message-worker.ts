@@ -5,33 +5,32 @@ import { Worker } from "bullmq";
 import { redisConnection } from "../redis";
 import { PDFLoader } from "@langchain/community/document_loaders/fs/pdf";
 import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters";
-import { GoogleGenAI } from "@google/genai";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 import { QdrantClient } from "@qdrant/js-client-rest";
 import axios from "axios";
 
-const COLLECTION_NAME = "langchainjs-cohere";
-const VECTOR_SIZE = 1024; // Cohere embed-english-v3.0 output dimension
+const COLLECTION_NAME = "langchainjs-gemini";
+const VECTOR_SIZE = 768;
 
-async function embedDocuments(apiKey: string, texts: string[]): Promise<number[][]> {
-  const res = await fetch("https://api.cohere.com/v1/embed", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      model: "embed-english-v3.0",
-      texts: texts,
-      input_type: "search_document",
+async function embedDocuments(
+  apiKey: string,
+  texts: string[],
+): Promise<number[][]> {
+  const genAI = new GoogleGenerativeAI(apiKey);
+
+  return await Promise.all(
+    texts.map(async (text) => {
+      // @ts-expect-error - embedContent exists at runtime on GoogleGenerativeAI
+      const result = await genAI.embedContent({
+        model: "models/gemini-embedding-001",
+        content: {
+          parts: [{ text }],
+        },
+      });
+
+      return result.embedding.values;
     }),
-  });
-
-  if (!res.ok) {
-    const err = await res.text();
-    throw new Error(`Cohere Embed failed (${res.status}): ${err}`);
-  }
-  const data = await res.json();
-  return data.embeddings;
+  );
 }
 
 const worker = new Worker(
@@ -70,7 +69,10 @@ const worker = new Worker(
     console.log(`Step 3 DONE - ${texts.length} chunks`);
 
     console.log("Step 4: Embedding");
-    const vectors = await embedDocuments(process.env.COHERE_API_KEY!, texts.map((t) => t.pageContent));
+    const vectors = await embedDocuments(
+      process.env.GEMINI_API_KEY!,
+      texts.map((t) => t.pageContent),
+    );
     console.log("Step 4 DONE");
 
     // 5. Upload to Qdrant directly (bypasses @langchain/qdrant bug)
@@ -83,7 +85,7 @@ const worker = new Worker(
     // Ensure collection exists
     const collections = await client.getCollections();
     const exists = collections.collections.some(
-      (c) => c.name === COLLECTION_NAME
+      (c) => c.name === COLLECTION_NAME,
     );
     if (!exists) {
       await client.createCollection(COLLECTION_NAME, {
