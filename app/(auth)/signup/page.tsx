@@ -1,6 +1,6 @@
 "use client";
 import { useSession, signIn } from "next-auth/react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 
@@ -15,13 +15,34 @@ export default function SignUp() {
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
+  // Redirect if already signed in
+  useEffect(() => {
+    if (session) {
+      router.push("/");
+    }
+  }, [session, router]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     setError("");
 
     try {
-      router.push("/signIn");
+      const res = await fetch("/api/signup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, email, password }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setError(data.message || "An error occurred during registration");
+        return;
+      }
+
+      // Registration successful — redirect to sign in
+      router.push("/Dashboard");
     } catch (err: unknown) {
       if (err instanceof Error) {
         setError(err.message);
@@ -44,11 +65,8 @@ export default function SignUp() {
     );
   }
 
-  // If already signed in, redirect
-  if (session) {
-    router.push("/");
-    return null;
-  }
+  // If already signed in, show nothing while redirecting
+  if (session) return null;
 
   // Sign up Form UI
   return (

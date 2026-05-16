@@ -21,6 +21,19 @@ export default function SignIn() {
     setError("");
 
     try {
+      // Step 1: Call custom API route
+      const apiRes = await fetch("/api/signIn", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
+      const data = await apiRes.json();
+      if (!apiRes.ok) {
+        setError(data.message || "Invalid email or password");
+        return;
+      }
+
+      // Step 2: Create the NextAuth session
       const res = await signIn("credentials", {
         email,
         password,
@@ -30,7 +43,7 @@ export default function SignIn() {
       if (res?.error) {
         setError("Invalid email or password");
       } else {
-        router.push("/");
+        router.push("/Dashboard");
         router.refresh();
       }
     } catch (err) {

@@ -13,7 +13,15 @@ import {
 } from "@/app/components/Svg";
 
 export default function DashboardPage() {
-  const [messages, setMessages] = useState<{ id: number; role: string; text: string; timestamp: string; file?: string | null }[]>([
+  const [messages, setMessages] = useState<
+    {
+      id: number;
+      role: string;
+      text: string;
+      timestamp: string;
+      file?: string | null;
+    }[]
+  >([
     {
       id: 1,
       role: "assistant",
@@ -24,7 +32,6 @@ export default function DashboardPage() {
       }),
     },
   ]);
-
 
   const [input, setInput] = useState("");
   const [file, setFile] = useState<File | null>(null);
@@ -104,7 +111,7 @@ export default function DashboardPage() {
         : firstUserMsg.text.length > 25
           ? firstUserMsg.text.substring(0, 25) + "..."
           : firstUserMsg.text;
-          
+
       // Add the new title to the top of the recent sessions list
       setRecentSessions((prev) => [sessionTitle, ...prev]);
     }
@@ -143,7 +150,10 @@ export default function DashboardPage() {
         </div>
 
         <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">
-          <button onClick={handleClearChat} className="w-full flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-3 rounded-xl transition-all shadow-lg shadow-indigo-600/20 font-medium mb-6 hover:scale-[1.02] active:scale-[0.98]">
+          <button
+            onClick={handleClearChat}
+            className="w-full flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-3 rounded-xl transition-all shadow-lg shadow-indigo-600/20 font-medium mb-6 hover:scale-[1.02] active:scale-[0.98]"
+          >
             <svg
               xmlns="http://www.w3.org/2000/svg"
               width="18"
@@ -240,7 +250,10 @@ export default function DashboardPage() {
                     <span className="text-sm font-medium text-neutral-400">
                       {msg.role === "user" ? "You" : "Lexora"}
                     </span>
-                    <span suppressHydrationWarning className="text-xs text-neutral-600">
+                    <span
+                      suppressHydrationWarning
+                      className="text-xs text-neutral-600"
+                    >
                       {msg.timestamp}
                     </span>
                   </div>

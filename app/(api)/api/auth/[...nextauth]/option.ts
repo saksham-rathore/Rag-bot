@@ -1,4 +1,3 @@
-import NextAuth from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
 import User from "@/app/Model/User";
@@ -101,5 +100,3 @@ export const authOptions: AuthOptions = {
   },
   secret: process.env.AUTH_SECRET,
 };
-
-export default NextAuth(authOptions);
